@@ -111,6 +111,7 @@ struct ExecutorsAvailable
   bool cuda_persistent_fewgs = false;
   bool cuda_graph = false;
   bool mpi_type = false;
+  bool mpi_type_direct = false;
 };
 
 struct ExecContexts
@@ -134,6 +135,7 @@ struct ExecContexts
   ExecContext<cuda_graph_pol> cuda_graph{base_cuda};
 #endif
   ExecContext<mpi_type_pol> mpi_type{base_mpi};
+  ExecContext<mpi_type_direct_pol> mpi_type_direct{base_mpi};
 };
 
 } // namespace COMB

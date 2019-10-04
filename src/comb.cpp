@@ -157,6 +157,10 @@ int main(int argc, char** argv)
                 *method = CommInfo::method::testsome;
               } else if (strcmp(argv[i], "test_all") == 0) {
                 *method = CommInfo::method::testall;
+              /*  
+              } else if (strcmp(argv[i], "wait_any_mpi_direct") == 0) {
+                *method = CommInfo::method::wait_any_mpi_direct;
+              */
               } else {
                 fgprintf(FileGroup::err_master, "Invalid argument to sub-option, ignoring %s %s %s.\n", argv[i-2], argv[i-1], argv[i]);
               }
@@ -293,6 +297,8 @@ int main(int argc, char** argv)
   #endif
               } else if (strcmp(argv[i], "mpi_type") == 0) {
                 exec_avail.mpi_type = enabledisable;
+              } else if (strcmp(argv[i], "mpi_type_direct") == 0) {
+                exec_avail.mpi_type_direct = enabledisable;
               } else {
                 fgprintf(FileGroup::err_master, "Invalid argument to sub-option, ignoring %s %s %s.\n", argv[i-2], argv[i-1], argv[i]);
               }
@@ -626,7 +632,7 @@ int main(int argc, char** argv)
 
   if (comm_avail.mpi)
     COMB::test_cycles_mpi(comminfo, info, exec, alloc, exec_avail, num_vars, ncycles, tm, tm_total);
-
+  
 #ifdef COMB_ENABLE_GPUMP
   if (comm_avail.gpump)
     COMB::test_cycles_gpump(comminfo, info, exec, alloc, exec_avail, num_vars, ncycles, tm, tm_total);

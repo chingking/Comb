@@ -535,6 +535,29 @@ void do_cycles_mpi_type(std::true_type const&,
 }
 
 template < typename comm_pol >
+void do_cycles_mpi_type_direct(std::true_type const&,
+                        CommContext<comm_pol>& con_comm,
+                        CommInfo& comminfo, MeshInfo& info,
+                        COMB::ExecContexts& exec,
+                        AllocatorInfo& mesh_aloc,
+                        COMB::ExecutorsAvailable& exec_avail,
+                        IdxT num_vars, IdxT ncycles, Timer& tm, Timer& tm_total)
+{
+  if (exec_avail.seq && exec_avail.mpi_type_direct && exec_avail.mpi_type_direct && should_do_cycles(con_comm, exec.seq, mesh_aloc, exec.mpi_type_direct, mesh_aloc, exec.mpi_type_direct, mesh_aloc))
+    do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.seq, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), tm, tm_total);
+
+#ifdef COMB_ENABLE_OPENMP
+  if (exec_avail.omp && exec_avail.mpi_type_direct && exec_avail.mpi_type_direct && should_do_cycles(con_comm, exec.omp, mesh_aloc, exec.mpi_type_direct, mesh_aloc, exec.mpi_type_direct, mesh_aloc))
+    do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.omp, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), tm, tm_total);
+#endif
+
+#ifdef COMB_ENABLE_CUDA
+  if (exec_avail.cuda && exec_avail.mpi_type_direct && exec_avail.mpi_type_direct && should_do_cycles(con_comm, exec.cuda, mesh_aloc, exec.mpi_type_direct, mesh_aloc, exec.mpi_type_direct, mesh_aloc))
+    do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.cuda, mesh_aloc.allocator(), exec.mpi_type, mesh_aloc.allocator(), exec.mpi_type, mesh_aloc.allocator(), tm, tm_total);
+#endif
+}
+
+template < typename comm_pol >
 void do_cycles_mpi_type(std::false_type const&,
                         CommContext<comm_pol>&,
                         CommInfo&, MeshInfo&,
@@ -631,6 +654,9 @@ void do_cycles_allocator(CommContext<comm_pol>& con_comm,
 #endif
 
   do_cycles_mpi_type(typename std::conditional<comm_pol::use_mpi_type, std::true_type, std::false_type>::type{},
+      con_comm, comminfo, info, exec, mesh_aloc, exec_avail, num_vars, ncycles, tm, tm_total);
+
+  do_cycles_mpi_type_direct(typename std::conditional<comm_pol::use_mpi_type, std::true_type, std::false_type>::type{},
       con_comm, comminfo, info, exec, mesh_aloc, exec_avail, num_vars, ncycles, tm, tm_total);
 }
 

@@ -64,7 +64,7 @@ run_comb="$(pwd)/comb"
 
 # Choose arguments for comb
 # elements on one side of the cube for each process
-elems_per_procs_per_side=100 # 180
+elems_per_procs_per_side=200 # 50 100 180
 # overall size of the grid
 let size=procs_per_side*elems_per_procs_per_side
 comb_args="${size}_${size}_${size}"
@@ -89,15 +89,18 @@ comb_args="${comb_args} -exec disable seq"
 # enable cuda execution tests
 comb_args="${comb_args} -exec enable cuda"
 # enable cuda execution tests
-comb_args="${comb_args} -exec enable mpi_type"
+#comb_args="${comb_args} -exec enable mpi_type"
+comb_args="${comb_args} -exec enable mpi_type_direct"
 # disable host memory tests
 comb_args="${comb_args} -memory disable host"
+#comb_args="${comb_args} -memory disable cuda_pinned"
 # enable cuda managed memory tests
 comb_args="${comb_args} -memory enable cuda_device"
 # enable cuda managed memory tests
-comb_args="${comb_args} -memory enable cuda_managed"
+#comb_args="${comb_args} -memory enable cuda_managed"
 # enable mock communication tests
-comb_args="${comb_args} -comm enable mock"
+#comb_args="${comb_args} -comm enable mock"
+comb_args="${comb_args} -comm disable mock"
 # enable mpi communication tests
 comb_args="${comb_args} -comm enable mpi"
 

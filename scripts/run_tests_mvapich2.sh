@@ -7,7 +7,7 @@ COMB_PATH=$PWD
 RUN_PATH=$PWD
 cd $COMB_PATH
 
-procs_per_side=2
+procs_per_side=4
 
 run_smpi=0
 run_mv2=1
@@ -68,7 +68,8 @@ if [ $run_mv2 -eq 1 ]; then
 
     ### TODO: add installation path of other version of MVAPICH2 library (or other MPI libraries) if desired
     # MPI_NAME=MY-MVAPICH2-GDR-jsrun
-    MPI_HOME=
+    MPI_NAME=next-gdr-jsrun
+    MPI_HOME=/g/g91/chu30/mv2-src/mv2-gdr-gcc-cuda9.2-install-jsrun
     if [[ ! $MPI_HOME == "" ]]; then
         export MPI_HOME=$MPI_HOME
         export PATH=$MPI_HOME/bin:$PATH
@@ -90,7 +91,7 @@ if [ $run_mv2 -eq 1 ]; then
     ln -s $BUILD_PATH/bin/comb .
     ln -s $COMB_PATH/scripts/* .
 
-    mv2_envs=$mv2_envs" MV2_USE_CUDA=1 MV2_USE_GDR=1 MV2_USE_GPUDIRECT_GDRCOPY=0 MV2_SHOW_CPU_BINDING=1 MV2_CPU_BINDING_POLICY=hybrid MV2_HYBRID_BINDING_POLICY=spread MV2_IBA_HCA=mlx5_0:mlx5_3"
+    mv2_envs=$mv2_envs" MV2_USE_CUDA=1 MV2_USE_GDR=1 MV2_USE_GPUDIRECT_GDRCOPY=0 MV2_SHOW_CPU_BINDING=1 MV2_CPU_BINDING_POLICY=hybrid MV2_HYBRID_BINDING_POLICY=spread MV2_IBA_HCA=mlx5_0:mlx5_3 MV2_SHOW_CPU_BINDING=1 MV2_DEBUG_SHOW_BACKTRACE=1 MV2_DATATYPE_SHM_CACHE_DEBUG=1"
     export USE_MVAPICH2=1
     export $mv2_envs
     ### TODO: change visible devices if desired

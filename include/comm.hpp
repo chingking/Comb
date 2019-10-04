@@ -134,7 +134,8 @@ struct CommInfo
   , waitsome
   , testsome
   , waitall
-  , testall };
+  , testall
+  , waitany_mpi_direct };
 
   static const char* method_str(method m)
   {
@@ -146,6 +147,7 @@ struct CommInfo
       case method::testsome: str = "test_some"; break;
       case method::waitall:  str = "wait_all";  break;
       case method::testall:  str = "test_all";  break;
+      case method::waitany_mpi_direct:  str = "wait_any_mpi_direct";  break;
     }
     return str;
   }
@@ -382,11 +384,22 @@ struct Comm
     m_recv_requests.resize(num_recvs, con_comm.recv_request_null());
 
     switch (post_recv_method) {
+#if 0
+      case CommInfo::method::waitany_mpi_direct:
+      {
+        int off = 0;
+        for (IdxT i = 0; i < num_recvs; ++i) {
+          //FGPRINTF(FileGroup::proc, "posting receive, %d of %d; have_many() %d\n", i , num_recvs, m_recvs[i].have_many());
+          off += m_recvs[i].Irecv(m_recv_contexts_many[i], con_comm, &m_recv_requests[off]);
+        }
+      } break;
+#endif
       case CommInfo::method::waitany:
       case CommInfo::method::testany:
       {
         for (IdxT i = 0; i < num_recvs; ++i) {
 
+          //FGPRINTF(FileGroup::proc, "posting receive, %d of %d; have_many() %d\n", i , num_recvs, m_recvs[i].have_many());
           if (m_recvs[i].have_many()) {
             m_recvs[i].allocate(m_recv_contexts_many[i], con_comm, many_aloc);
             m_recvs[i].Irecv(m_recv_contexts_many[i], con_comm, &m_recv_requests[i]);
@@ -473,6 +486,21 @@ struct Comm
     }
 
     switch (post_send_method) {
+#if 0
+      case CommInfo::method::waitany_mpi_direct:
+      {
+        int off = 0;
+        for (IdxT i = 0; i < num_sends; ++i) {
+            off += m_recvs[i].items.size();
+        }
+        m_send_requests.resize(off, con_comm.send_request_null());
+        off = 0;
+        for (IdxT i = 0; i < num_sends; ++i) {
+          //FGPRINTF(FileGroup::proc, "posting receive, %d of %d; have_many() %d\n", i , num_recvs, m_recvs[i].have_many());
+          m_sends[i].Isend(m_send_contexts_many[i], con_comm, m_send_requests, &off);
+        }
+      } break;
+#endif
       case CommInfo::method::waitany:
       {
         for (IdxT i = 0; i < num_sends; ++i) {

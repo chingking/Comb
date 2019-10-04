@@ -26,7 +26,8 @@ if [[ ! "x" == "x$SYS_TYPE" ]]; then
 fi
 
 ### TODO: add installation path of other version of MVAPICH2 library (or other MPI libraries) if desired
-MPI_HOME=
+MPI_NAME=next-gdr-jsrun
+MPI_HOME=/g/g91/chu30/mv2-src/mv2-gdr-gcc-cuda9.2-install-jsrun
 if [[ ! $MPI_HOME == "" ]]; then
     export PATH=$MPI_HOME/bin:$PATH
     export LD_LIBRARY_PATH=$MPI_HOME/lib:$LD_LIBRARY_PATH
