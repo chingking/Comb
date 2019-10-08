@@ -82,6 +82,12 @@ void do_cycles(CommContext<pol_comm>& con_comm_in,
     // make communicator object
     comm_type comm(con_comm, comminfo, aloc_mesh, aloc_many, aloc_few);
 
+    if (comm_type::use_mpi_type_direct) {
+        comm.use_direct_mpi_type = true;
+    } else {
+        comm.use_direct_mpi_type = false;
+    }
+
     comm.barrier();
 
     tm_total.start(tm_con, "start-up");
@@ -543,6 +549,7 @@ void do_cycles_mpi_type_direct(std::true_type const&,
                         COMB::ExecutorsAvailable& exec_avail,
                         IdxT num_vars, IdxT ncycles, Timer& tm, Timer& tm_total)
 {
+
   if (exec_avail.seq && exec_avail.mpi_type_direct && exec_avail.mpi_type_direct && should_do_cycles(con_comm, exec.seq, mesh_aloc, exec.mpi_type_direct, mesh_aloc, exec.mpi_type_direct, mesh_aloc))
     do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.seq, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), tm, tm_total);
 
@@ -553,12 +560,23 @@ void do_cycles_mpi_type_direct(std::true_type const&,
 
 #ifdef COMB_ENABLE_CUDA
   if (exec_avail.cuda && exec_avail.mpi_type_direct && exec_avail.mpi_type_direct && should_do_cycles(con_comm, exec.cuda, mesh_aloc, exec.mpi_type_direct, mesh_aloc, exec.mpi_type_direct, mesh_aloc))
-    do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.cuda, mesh_aloc.allocator(), exec.mpi_type, mesh_aloc.allocator(), exec.mpi_type, mesh_aloc.allocator(), tm, tm_total);
+    do_cycles(con_comm, comminfo, info, num_vars, ncycles, exec.cuda, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), exec.mpi_type_direct, mesh_aloc.allocator(), tm, tm_total);
 #endif
 }
 
 template < typename comm_pol >
 void do_cycles_mpi_type(std::false_type const&,
+                        CommContext<comm_pol>&,
+                        CommInfo&, MeshInfo&,
+                        COMB::ExecContexts&,
+                        AllocatorInfo&,
+                        COMB::ExecutorsAvailable&,
+                        IdxT, IdxT, Timer&, Timer&)
+{
+}
+
+template < typename comm_pol >
+void do_cycles_mpi_type_direct(std::false_type const&,
                         CommContext<comm_pol>&,
                         CommInfo&, MeshInfo&,
                         COMB::ExecContexts&,

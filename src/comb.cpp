@@ -157,10 +157,6 @@ int main(int argc, char** argv)
                 *method = CommInfo::method::testsome;
               } else if (strcmp(argv[i], "test_all") == 0) {
                 *method = CommInfo::method::testall;
-              /*  
-              } else if (strcmp(argv[i], "wait_any_mpi_direct") == 0) {
-                *method = CommInfo::method::wait_any_mpi_direct;
-              */
               } else {
                 fgprintf(FileGroup::err_master, "Invalid argument to sub-option, ignoring %s %s %s.\n", argv[i-2], argv[i-1], argv[i]);
               }

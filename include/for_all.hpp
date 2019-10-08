@@ -97,6 +97,7 @@ struct adapter_3d {
 #include "pol_cuda_persistent.hpp"
 #include "pol_cuda_graph.hpp"
 #include "pol_mpi_type.hpp"
+#include "pol_mpi_type_direct.hpp"
 
 namespace COMB {
 

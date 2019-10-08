@@ -472,6 +472,7 @@ struct Message<gpump_pol> : detail::MessageBase
   void pack(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     DataT* buf = m_buf;
     assert(buf != nullptr);
     auto end = std::end(items);
@@ -489,6 +490,7 @@ struct Message<gpump_pol> : detail::MessageBase
   void unpack(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     DataT const* buf = m_buf;
     assert(buf != nullptr);
     auto end = std::end(items);
@@ -519,6 +521,7 @@ public:
   void Isend(context& con, communicator_type& con_comm, send_request_type* request)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "%p Isend %p nbytes %d to %i tag %i\n", this, buffer(), nbytes(), partner_rank(), tag());
 
     start_Isend(con, con_comm);
@@ -556,6 +559,7 @@ public:
   static void wait_pack_complete(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "wait_pack_complete\n");
 
     // gpump isends use message packing context and don't need synchronization
@@ -566,6 +570,7 @@ public:
   static void start_Isends(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "start_Isends\n");
 
     cork_Isends(con, con_comm);
@@ -575,6 +580,7 @@ public:
   static void finish_Isends(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "finish_Isends\n");
 
     uncork_Isends(con, con_comm);
@@ -584,6 +590,7 @@ public:
   void Irecv(context& con, communicator_type& con_comm, recv_request_type* request)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "%p Irecv %p nbytes %d to %i tag %i\n", this, buffer(), nbytes(), partner_rank(), tag());
 
     detail::gpump::receive(con_comm.g, partner_rank(), m_region.mr, m_region.offset, nbytes());
@@ -600,6 +607,7 @@ public:
   void allocate(context&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     if (m_buf == nullptr) {
       m_region = get_mempool().allocate(con_comm.g, buf_aloc, nbytes());
       m_buf = (DataT*)m_region.ptr;
@@ -610,6 +618,7 @@ public:
   void deallocate(context& con, communicator_type& con_comm, COMB::Allocator& buf_aloc)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "gpump_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "gpump_pol does not support mpi_type_direct_pol");
     if (m_buf != nullptr) {
 
       if (m_kind == Kind::send) {

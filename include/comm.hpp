@@ -134,8 +134,7 @@ struct CommInfo
   , waitsome
   , testsome
   , waitall
-  , testall
-  , waitany_mpi_direct };
+  , testall };
 
   static const char* method_str(method m)
   {
@@ -147,7 +146,6 @@ struct CommInfo
       case method::testsome: str = "test_some"; break;
       case method::waitall:  str = "wait_all";  break;
       case method::testall:  str = "test_all";  break;
-      case method::waitany_mpi_direct:  str = "wait_any_mpi_direct";  break;
     }
     return str;
   }
@@ -200,13 +198,19 @@ struct Comm
   using policy_few  = policy_few_;
   using policy_comm  = policy_comm_;
 
+  static constexpr bool pol_many_is_mpi_type_direct = std::is_same<policy_many, mpi_type_direct_pol>::value;
+  static constexpr bool pol_few_is_mpi_type_direct  = std::is_same<policy_few,  mpi_type_direct_pol>::value;
+  static constexpr bool use_mpi_type_direct = pol_many_is_mpi_type_direct && pol_few_is_mpi_type_direct;
+
   static constexpr bool pol_many_is_mpi_type = std::is_same<policy_many, mpi_type_pol>::value;
   static constexpr bool pol_few_is_mpi_type  = std::is_same<policy_few,  mpi_type_pol>::value;
-  static constexpr bool use_mpi_type = pol_many_is_mpi_type && pol_few_is_mpi_type;
+  static constexpr bool use_mpi_type = (pol_many_is_mpi_type && pol_few_is_mpi_type) || use_mpi_type_direct;
 
   // check policies are consistent
   static_assert(pol_many_is_mpi_type == pol_few_is_mpi_type,
       "pol_many and pol_few must both be mpi_type_pol if either is mpi_type_pol");
+
+  bool use_direct_mpi_type;
 
   COMB::Allocator& mesh_aloc;
   COMB::Allocator& many_aloc;
@@ -383,17 +387,26 @@ struct Comm
 
     m_recv_requests.resize(num_recvs, con_comm.recv_request_null());
 
-    switch (post_recv_method) {
-#if 0
-      case CommInfo::method::waitany_mpi_direct:
-      {
-        int off = 0;
-        for (IdxT i = 0; i < num_recvs; ++i) {
-          //FGPRINTF(FileGroup::proc, "posting receive, %d of %d; have_many() %d\n", i , num_recvs, m_recvs[i].have_many());
-          off += m_recvs[i].Irecv(m_recv_contexts_many[i], con_comm, &m_recv_requests[off]);
+    /* NOTE: if we are using mpi_type_direct, we issue all Irecv calls and reture
+     * ignore the post_recv_method */
+    if (use_direct_mpi_type) {
+        // calculate how many recv op. will be and resize the request vector
+        num_recvs = 0;
+        for (IdxT i = 0; i < m_recvs.size(); ++i) {
+            num_recvs += m_recvs[i].items.size();
         }
-      } break;
-#endif
+        m_recv_requests.resize(num_recvs, con_comm.recv_request_null());
+
+        int off = 0;
+        for (IdxT i = 0; i < m_recvs.size(); ++i) {
+          FGPRINTF(FileGroup::proc, "posting receive, %d of %d (%d calls, offset %d); have_many() %d\n", i , num_recvs, m_recvs[i].items.size(), off, m_recvs[i].have_many());
+          m_recvs[i].Irecv(m_recv_contexts_many[i], con_comm, &m_recv_requests[off]);
+          off += m_recvs[i].items.size();
+        }
+        return;
+    }
+
+    switch (post_recv_method) {
       case CommInfo::method::waitany:
       case CommInfo::method::testany:
       {
@@ -485,22 +498,26 @@ struct Comm
       }
     }
 
-    switch (post_send_method) {
-#if 0
-      case CommInfo::method::waitany_mpi_direct:
-      {
+    /* NOTE: if we are using mpi_type_direct, we issue all Irecv calls and reture
+     * ignore the post_send_method */
+    if (use_direct_mpi_type) {
+        // calculate how many recv op. will be and resize the request vector
+        int total_num_sends = 0;
+        for (IdxT i = 0; i < m_sends.size(); ++i) {
+            total_num_sends += m_sends[i].items.size();
+        }
+        m_send_requests.resize(total_num_sends, con_comm.send_request_null());
+
         int off = 0;
-        for (IdxT i = 0; i < num_sends; ++i) {
-            off += m_recvs[i].items.size();
+        for (IdxT i = 0; i < m_sends.size(); ++i) {
+          FGPRINTF(FileGroup::proc, "posting send, %d of %d (%d calls, offset %d); have_many() %d\n", i , num_sends, m_sends[i].items.size(), off, m_sends[i].have_many());
+          m_sends[i].Isend(m_send_contexts_many[i], con_comm, &m_send_requests[off]);
+          off += m_sends[i].items.size();
         }
-        m_send_requests.resize(off, con_comm.send_request_null());
-        off = 0;
-        for (IdxT i = 0; i < num_sends; ++i) {
-          //FGPRINTF(FileGroup::proc, "posting receive, %d of %d; have_many() %d\n", i , num_recvs, m_recvs[i].have_many());
-          m_sends[i].Isend(m_send_contexts_many[i], con_comm, m_send_requests, &off);
-        }
-      } break;
-#endif
+        return;
+    }
+
+    switch (post_send_method) {
       case CommInfo::method::waitany:
       {
         for (IdxT i = 0; i < num_sends; ++i) {
@@ -1121,6 +1138,18 @@ struct Comm
       }
     }
 
+    /* NOTE: if we are using mpi_type_direct, we issue waitall call and return
+     * ignore the wait_recv_method */
+    if (use_direct_mpi_type) {
+        num_recvs = m_recv_requests.size();
+
+        std::vector<typename policy_comm::recv_status_type> recv_statuses(m_recv_requests.size(), con_comm.recv_status_null());
+
+        message_type::wait_recv_all(con_comm, num_recvs, &m_recv_requests[0], &recv_statuses[0]);
+
+        return;
+    }
+
     switch (wait_recv_method) {
       case CommInfo::method::waitany:
       case CommInfo::method::testany:
@@ -1302,6 +1331,18 @@ struct Comm
     //FGPRINTF(FileGroup::proc, "posting sends\n");
 
     IdxT num_sends = m_sends.size();
+
+    /* NOTE: if we are using mpi_type_direct, we issue waitall call and return
+     * ignore the wait_send_method */
+    if (use_direct_mpi_type) {
+        num_sends = m_send_requests.size();
+
+        std::vector<typename policy_comm::send_status_type> send_statuses(m_send_requests.size(), con_comm.send_status_null());
+
+        message_type::wait_send_all(con_comm, num_sends, &m_send_requests[0], &send_statuses[0]);
+
+        return;
+    }
 
     switch (wait_send_method) {
       case CommInfo::method::waitany:

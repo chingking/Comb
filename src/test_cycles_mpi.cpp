@@ -28,6 +28,7 @@ void test_cycles_mpi(CommInfo& comminfo, MeshInfo& info,
 {
   CommContext<mpi_pol> con_comm{exec.base_mpi};
 
+#if 0
   {
     // mpi host memory tests
     AllocatorInfo& cpu_many_aloc = alloc.host;
@@ -50,6 +51,7 @@ void test_cycles_mpi(CommInfo& comminfo, MeshInfo& info,
                          exec_avail,
                          num_vars, ncycles, tm, tm_total);
   }
+#endif
 
 #ifdef COMB_ENABLE_CUDA
   {

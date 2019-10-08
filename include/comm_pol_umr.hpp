@@ -132,6 +132,7 @@ struct Message<umr_pol> : detail::MessageBase
   void pack(context& con, communicator_type&)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     DataT* buf = m_buf;
     assert(buf != nullptr);
     auto end = std::end(items);
@@ -149,6 +150,7 @@ struct Message<umr_pol> : detail::MessageBase
   void unpack(context& con, communicator_type&)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     DataT const* buf = m_buf;
     assert(buf != nullptr);
     auto end = std::end(items);
@@ -167,6 +169,7 @@ struct Message<umr_pol> : detail::MessageBase
   void Isend(context&, communicator_type& con_comm, send_request_type* request)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "%p Isend %p nbytes %d to %i tag %i\n", this, buffer(), nbytes(), partner_rank(), tag());
     detail::UMR::Isend(buffer(), nbytes(), UMR_BYTE, partner_rank(), tag(), con_comm.comm, request);
   }
@@ -175,6 +178,7 @@ struct Message<umr_pol> : detail::MessageBase
   static void wait_pack_complete(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "wait_pack_complete\n");
     con_comm.waitOn(con);
   }
@@ -183,6 +187,7 @@ struct Message<umr_pol> : detail::MessageBase
   static void start_Isends(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "start_Isends\n");
     COMB::ignore_unused(con, con_comm);
   }
@@ -191,6 +196,7 @@ struct Message<umr_pol> : detail::MessageBase
   static void finish_Isends(context& con, communicator_type& con_comm)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "finish_Isends\n");
     COMB::ignore_unused(con, con_comm);
   }
@@ -199,6 +205,7 @@ struct Message<umr_pol> : detail::MessageBase
   void Irecv(context&, communicator_type& con_comm, recv_request_type* request)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     // FGPRINTF(FileGroup::proc, "%p Irecv %p nbytes %d to %i tag %i\n", this, buffer(), nbytes(), partner_rank(), tag());
     detail::UMR::Irecv(buffer(), nbytes(), UMR_BYTE, partner_rank(), tag(), con_comm.comm, request);
   }
@@ -208,6 +215,7 @@ struct Message<umr_pol> : detail::MessageBase
   void allocate(context&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     COMB::ignore_unused(con_comm);
     if (m_buf == nullptr) {
       m_buf = (DataT*)buf_aloc.allocate(nbytes());
@@ -218,6 +226,7 @@ struct Message<umr_pol> : detail::MessageBase
   void deallocate(context&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
   {
     static_assert(!std::is_same<context, ExecContext<mpi_type_pol>>::value, "umr_pol does not support mpi_type_pol");
+    static_assert(!std::is_same<context, ExecContext<mpi_type_direct_pol>>::value, "umr_pol does not support mpi_type_direct_pol");
     COMB::ignore_unused(con_comm);
     if (m_buf != nullptr) {
       buf_aloc.deallocate(m_buf);

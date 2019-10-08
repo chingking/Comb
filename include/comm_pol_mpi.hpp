@@ -16,8 +16,6 @@
 #ifndef _COMM_POL_MPI_HPP
 #define _COMM_POL_MPI_HPP
 
-#define _USE_MPI_PACK_ 1
-
 #include "config.hpp"
 
 #include "for_all.hpp"
@@ -144,9 +142,11 @@ struct Message<mpi_pol> : detail::MessageBase
     }
   }
 
+  void pack(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm) {
+  }
+
   void pack(ExecContext<mpi_type_pol>&, communicator_type& con_comm)
   {
-#ifdef _USE_MPI_PACK_
     if (items.size() == 1) {
       m_nbytes = sizeof(DataT)*items.front().size;
     } else {
@@ -164,7 +164,6 @@ struct Message<mpi_pol> : detail::MessageBase
       // set nbytes to actual value
       m_nbytes = pos;
     }
-#endif
   }
 
   template < typename context >
@@ -183,9 +182,11 @@ struct Message<mpi_pol> : detail::MessageBase
     }
   }
 
+  void unpack(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm) {
+  }
+
   void unpack(ExecContext<mpi_type_pol>&, communicator_type& con_comm)
   {
-#ifdef _USE_MPI_PACK_
     if (items.size() == 1) {
       // nothing to do
     } else {
@@ -201,7 +202,6 @@ struct Message<mpi_pol> : detail::MessageBase
         detail::MPI::Unpack(buf, buf_max_nbytes, &pos, dst, 1, mpi_type, con_comm.comm);
       }
     }
-#endif
   }
 
 
@@ -225,18 +225,18 @@ struct Message<mpi_pol> : detail::MessageBase
     }
   }
 
-#ifdef _USE_MPI_PACK_
-  int Isend(ExecContext<mpi_type_pol>&, communicator_type& con_comm, send_request_type* request, int offset)
+  void Isend(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm, send_request_type* request)
   {
+    int offset = 0; 
     auto end = std::end(items);
     for (auto i = std::begin(items); i != end; ++i) {
       DataT const* src = i->data;
       MPI_Datatype mpi_type = i->mpi_type;
       FGPRINTF(FileGroup::proc, "%p Isend %p to %i tag %i\n", this, src, partner_rank(), tag() + offset);
       detail::MPI::Isend((void*)src, 1, mpi_type, partner_rank(), tag() + offset, con_comm.comm, &request[offset]);
+      offset ++;
     }
   }
-#endif
 
   template < typename context >
   static void wait_pack_complete(context& con, communicator_type& con_comm)
@@ -279,20 +279,18 @@ struct Message<mpi_pol> : detail::MessageBase
     }
   }
 
-#ifdef _USE_MPI_PACK_
   /* post recv with non-contiguous buffers */
-  int Irecv(ExecContext<mpi_type_pol>&, communicator_type& con_comm, recv_request_type* request, int offset)
+  void Irecv(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm, recv_request_type* request)
   {
+      int offset = 0;
       auto end = std::end(items);
       for (auto i = std::begin(items); i != end; ++i) {
         DataT* dst = i->data;
         MPI_Datatype mpi_type = i->mpi_type;
-        MPI_Request *mpi_req = &(i->mpi_req);
         detail::MPI::Irecv(dst, 1, mpi_type, partner_rank(), tag() + offset, con_comm.comm, &request[offset]);
+        offset ++;
       }
-      return items.size();
   }
-#endif
 
   template < typename context >
   void allocate(context&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
@@ -301,6 +299,11 @@ struct Message<mpi_pol> : detail::MessageBase
     if (m_buf == nullptr) {
       m_buf = (DataT*)buf_aloc.allocate(nbytes());
     }
+  }
+
+  void allocate(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
+  {
+    COMB::ignore_unused(con_comm);
   }
 
   void allocate(ExecContext<mpi_type_pol>&, communicator_type& con_comm, COMB::Allocator& buf_aloc)

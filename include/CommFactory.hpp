@@ -403,6 +403,17 @@ private:
     mpi_pack_nbytes = detail::MPI::Pack_size(1, mpi_type, comm);
   }
 
+  void populate_msg_info(ExecContext<mpi_type_direct_pol>&, MPI_Comm comm, MeshData const* msg_data, Box3d const& msg_box,
+                         LidxT*& indices, IdxT& len,
+                         MPI_Datatype& mpi_type, IdxT& mpi_pack_nbytes) const
+  {
+    COMB::ignore_unused(msg_data, indices);
+    len = msg_box.size();
+    mpi_type = msg_box.get_type_subarray();
+    detail::MPI::Type_commit(&mpi_type);
+    mpi_pack_nbytes = detail::MPI::Pack_size(1, mpi_type, comm);
+  }
+
   template < typename comm_type, typename msg_list_type >
   void populate_comm(comm_type& comm,
                      ExecContext<typename comm_type::policy_many>& con_many,

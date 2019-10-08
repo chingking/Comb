@@ -13,11 +13,12 @@
 // Please also see the LICENSE file for MIT license.
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef _POL_MPI_TYPE_HPP
-#define _POL_MPI_TYPE_HPP
+#ifndef _POL_MPI_TYPE_DIRECT_HPP
+#define _POL_MPI_TYPE_DIRECT_HPP 
 
 #include "config.hpp"
 
+#if 0
 struct mpi_type_component
 {
   void* ptr = nullptr;
@@ -27,26 +28,29 @@ struct mpi_type_group
 {
   void* ptr = nullptr;
 };
+#endif
 
 // execution policy indicating that message packing/unpacking should be done
 // in MPI using MPI_Types
-struct mpi_type_pol {
+struct mpi_type_direct_pol {
   static const bool async = false;
-  static const char* get_name() { return "mpi_type"; }
+  static const char* get_name() { return "mpi_type_direct"; }
   using event_type = int;
   using component_type = mpi_type_component;
   using group_type = mpi_type_group;
 };
 
 template < >
-struct ExecContext<mpi_type_pol> : MPIContext
+struct ExecContext<mpi_type_direct_pol> : MPIContext
 {
-  using pol = mpi_type_pol;
+  using pol = mpi_type_direct_pol;
   using event_type = typename pol::event_type;
   using component_type = typename pol::component_type;
   using group_type = typename pol::group_type;
 
   using base = MPIContext;
+
+  bool mpi_type_direct = true;
 
   ExecContext()
     : base()
@@ -167,4 +171,4 @@ struct ExecContext<mpi_type_pol> : MPIContext
 
 };
 
-#endif // _POL_MPI_TYPE_HPP
+#endif // _POL_MPI_TYPE_DIRECT_HPP

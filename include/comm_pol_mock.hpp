@@ -140,6 +140,9 @@ struct Message<mock_pol> : detail::MessageBase
     }
   }
 
+  void pack(ExecContext<mpi_type_direct_pol>&, communicator_type& /*con_comm*/)
+  {}
+
   void pack(ExecContext<mpi_type_pol>&, communicator_type& /*con_comm*/)
   {
     if (items.size() == 1) {
@@ -175,6 +178,10 @@ struct Message<mock_pol> : detail::MessageBase
       con.for_all(0, len, make_copy_idxr_idxr(buf, detail::indexer_idx{}, dst, detail::indexer_list_idx{indices}));
       buf += len;
     }
+  }
+
+  void unpack(ExecContext<mpi_type_direct_pol>&, communicator_type& /*con_comm*/)
+  {
   }
 
   void unpack(ExecContext<mpi_type_pol>&, communicator_type& /*con_comm*/)
@@ -258,6 +265,10 @@ struct Message<mock_pol> : detail::MessageBase
       *request = -1;
     }
   }
+  void Irecv(ExecContext<mpi_type_direct_pol>&, communicator_type&, recv_request_type* request)
+  {
+    *request = -1;
+  }
 
 
   template < typename context >
@@ -267,6 +278,11 @@ struct Message<mock_pol> : detail::MessageBase
     if (m_buf == nullptr) {
       m_buf = (DataT*)buf_aloc.allocate(nbytes());
     }
+  }
+
+  void allocate(ExecContext<mpi_type_direct_pol>&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
+  {
+    COMB::ignore_unused(con_comm);
   }
 
   void allocate(ExecContext<mpi_type_pol>&, communicator_type& con_comm, COMB::Allocator& buf_aloc)
